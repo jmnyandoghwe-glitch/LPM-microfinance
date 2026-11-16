@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LPM-Microfinance</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6fa;color:#172033}
+header{height:64px;background:#0759c9;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 18px;position:fixed;top:0;left:0;right:0;z-index:20}
+header h1{font-size:21px;margin:0}header small{opacity:.9}
+.sidebar{position:fixed;top:64px;bottom:0;left:0;width:235px;background:#fff;box-shadow:2px 0 10px #ddd;padding:12px;overflow:auto}
+.sidebar button{width:100%;border:0;background:#eef4ff;color:#174a9c;padding:12px;border-radius:8px;margin:4px 0;text-align:left;cursor:pointer}
+.sidebar button:hover,.sidebar button.active{background:#0759c9;color:#fff}
+.sidebar .danger{background:#dc3545;color:#fff}.sidebar .logout{background:#6f42c1;color:#fff}
+main{margin-left:235px;padding:88px 20px 30px}.page{display:none}.page.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 2px 9px #ddd}.card strong{display:block;font-size:22px;margin-top:8px}
+.box{background:#fff;padding:18px;border-radius:12px;box-shadow:0 2px 9px #ddd;margin-top:16px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}
+label{font-weight:bold;font-size:14px}input,select{width:100%;padding:11px;margin-top:5px;border:1px solid #ccd3df;border-radius:7px;font-size:15px}
+.btn{border:0;border-radius:7px;padding:10px 15px;background:#0759c9;color:#fff;cursor:pointer;margin:5px 3px}.success{background:#198754}.danger{background:#dc3545}.secondary{background:#6c757d}
+table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:10px;border-bottom:1px solid #e1e5ea;text-align:left;font-size:13px}th{background:#edf4ff}
+.search{max-width:360px}.total{background:#e8f5e9;padding:12px;border-radius:8px;margin-top:12px;font-weight:bold}
+.login{position:fixed;inset:0;background:linear-gradient(135deg,#0759c9,#062e6e);display:flex;align-items:center;justify-content:center;z-index:100}
+.loginbox{width:min(390px,92%);background:#fff;border-radius:16px;padding:28px;text-align:center;box-shadow:0 15px 45px #0005}
+.loginbox h2{color:#0759c9}.loginbox input{margin:10px 0}.error{height:22px;color:#dc3545;font-size:13px}
+@media(max-width:850px){.sidebar{width:68px}.sidebar button{font-size:0;text-align:center}.sidebar button:first-letter{font-size:20px}main{margin-left:68px}.cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}th,td{font-size:11px;padding:7px}}
+@media print{header,.sidebar,.no-print{display:none!important}main{margin:0;padding:10px}.page{display:none}.page#reports{display:block}}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login">
+<div class="loginbox">
+<div style="font-size:46px">🔐</div>
+<h2>LPM-Microfinance</h2>
+<p>Owner Login</p>
+<input id="loginPassword" type="password" placeholder="Password ya mmiliki">
+<button class="btn" style="width:100%" onclick="login()">🔓 Ingia</button>
+<div id="loginError" class="error"></div>
+<small>Password ya mwanzo: <b>jose@1234</b></small>
+</div>
+</div>
+
+<header><h1>💰 LPM-Microfinance</h1><small>Loan Management System</small></header>
+
+<nav class="sidebar">
+<button class="active" onclick="page('dashboard',this)">🏠 Dashboard</button>
+<button onclick="page('customers',this)">👤 Wateja</button>
+<button onclick="page('loans',this)">💵 Mikopo</button>
+<button onclick="page('payments',this)">💳 Malipo</button>
+<button onclick="page('reports',this)">📊 Ripoti</button>
+<button onclick="page('settings',this)">⚙️ Settings</button>
+<button onclick="backup()">💾 Backup</button>
+<button class="danger" onclick="wipe()">🗑️ Futa Data</button>
+<button class="logout" onclick="logout()">🚪 Logout</button>
+</nav>
+
+<main>
+<section id="dashboard" class="page active">
+<h2>Dashboard</h2>
+<div class="cards">
+<div class="card">👤 Wateja<strong id="dc">0</strong></div>
+<div class="card">💵 Mikopo<strong id="dl">0</strong></div>
+<div class="card">💳 Malipo<strong id="dp">TZS 0</strong></div>
+<div class="card">📌 Madeni<strong id="db">TZS 0</strong></div>
+</div>
+<div class="box"><h3>Mikopo ya mwisho</h3><table><thead><tr><th>Jina la mteja</th><th>Kiasi</th><th>Riba</th><th>Jumla</th><th>Salio</th><th>Tarehe</th></tr></thead><tbody id="recent"></tbody></table></div>
+</section>
+
+<section id="customers" class="page">
+<h2>👤 Wateja</h2>
+<div class="box">
+<form onsubmit="addCustomer(event)">
+<div class="grid">
+<div><label>1. Jina la mteja</label><input id="cName" required></div>
+<div><label>2. No za mteja</label><input id="cPhone" required></div>
+<div><label>3. NIDA ya mteja</label><input id="cNida"></div>
+<div><label>4. Biashara yake</label><input id="cBusiness"></div>
+<div><label>Maelezo ya ziada</label><input id="cExtra"></div>
+</div>
+<button class="btn success">➕ Sajili Mteja</button>
+</form>
+</div>
+<div class="box"><input class="search" placeholder="🔎 Tafuta mteja..." oninput="renderCustomers(this.value)">
+<table><thead><tr><th>Jina</th><th>No</th><th>NIDA</th><th>Biashara yake</th><th>Action</th></tr></thead><tbody id="customerTable"></tbody></table></div>
+</section>
+
+<section id="loans" class="page">
+<h2>💵 Mikopo</h2>
+<div class="box">
+<form onsubmit="addLoan(event)">
+<div class="grid">
+<div><label>1. Jina la mteja</label><select id="loanCustomer" required></select></div>
+<div><label>2. No za mteja</label><input id="displayPhone" readonly placeholder="Hujachagua mteja"></div>
+<div><label>3. Kiasi cha mkopo (TZS)</label><input id="principal" type="number" min="0" required></div>
+<div><label>Riba — kiasi maalum (TZS)</label><input id="interestAmount" type="number" min="0" required placeholder="Mfano 5000"></div>
+<div><label>5. Jina la mdhamini</label><input id="debtorName" required></div>
+<div><label>6. No za mdhamini </label><input id="debtorPhone" required></div>
+<div><label>7. NIDA ya mdhamini </label><input id="debtorNida"></div>
+<div><label>Tarehe ya mkopo</label><input id="loanDate" type="date" required></div>
+<div><label>Tarehe ya marejesho 1</label><input id="dueDate1" type="date" required></div>
+<div><label>Tarehe ya marejesho 2</label><input id="dueDate2" type="date" required></div>
+<div><label>Tarehe ya marejesho 3</label><input id="dueDate3" type="date" required></div>
+<div><label>Tarehe ya marejesho 4</label><input id="dueDate4" type="date" required></div>
+</div>
+<div id="loanTotal" class="total">Jumla ya kulipa: TZS 0</div>
+<button class="btn success">💾 Hifadhi Mkopo</button>
+</form>
+</div>
+<div class="box"><table><thead><tr><th>Mteja</th><th>Kiasi</th><th>Riba</th><th>Jumla</th><th>Mdhamini/Mdeni</th><th>NIDA</th><th>Salio</th><th>Due 1</th><th>Due 2</th><th>Due 3</th><th>Due 4</th><th>Action</th></tr></thead><tbody id="loanTable"></tbody></table></div>
+</section>
+
+<section id="payments" class="page">
+<h2>💳 Malipo</h2>
+<div class="box">
+<form onsubmit="addPayment(event)">
+<div class="grid">
+<div><label>Mkopo</label><select id="payLoan" required></select></div>
+<div><label>Kiasi cha malipo (TZS)</label><input id="payAmount" type="number" min="1" required></div>
+<div><label>Tarehe</label><input id="payDate" type="date" required></div>
+</div>
+<button class="btn success">➕ Hifadhi Malipo</button>
+</form>
+</div>
+<div class="box"><table><thead><tr><th>Mteja</th><th>Malipo</th><th>Tarehe</th></tr></thead><tbody id="paymentTable"></tbody></table></div>
+</section>
+
+<section id="reports" class="page">
+<h2>📊 Ripoti</h2>
+<div class="cards">
+<div class="card">Jumla ya mikopo<strong id="rp">TZS 0</strong></div>
+<div class="card">Jumla ya riba<strong id="ri">TZS 0</strong></div>
+<div class="card">Jumla ya madeni<strong id="rd">TZS 0</strong></div>
+<div class="card">Jumla ya malipo<strong id="rpay">TZS 0</strong></div>
+</div>
+<div class="box"><button class="btn no-print" onclick="window.print()">🖨️ Print Ripoti</button></div>
+</section>
+
+<section id="settings" class="page">
+<h2>⚙️ Settings</h2>
+<div class="box">
+<form onsubmit="changePassword(event)">
+<h3>🔐 Badilisha Password ya Mmiliki</h3>
+<div class="grid">
+<div><label>Password ya sasa</label><input id="oldPass" type="password" required></div>
+<div><label>Password mpya</label><input id="newPass" type="password" minlength="4" required></div>
+<div><label>Rudia password mpya</label><input id="confirmPass" type="password" minlength="4" required></div>
+</div><button class="btn success">🔑 Badilisha Password</button>
+</form>
+</div>
+</section>
+</main>
+
+<script>
+let customers=JSON.parse(localStorage.getItem('lpm_customers')||'[]');
+let loans=JSON.parse(localStorage.getItem('lpm_loans')||'[]');
+let payments=JSON.parse(localStorage.getItem('lpm_payments')||'[]');
+const DEFAULT_PASS='jose@1234';
+const money=n=>new Intl.NumberFormat('sw-TZ',{style:'currency',currency:'TZS',maximumFractionDigits:0}).format(Number(n)||0);
+const today=()=>new Date().toISOString().slice(0,10);
+
+function save(){localStorage.setItem('lpm_customers',JSON.stringify(customers));localStorage.setItem('lpm_loans',JSON.stringify(loans));localStorage.setItem('lpm_payments',JSON.stringify(payments))}
+function password(){return localStorage.getItem('lpm_owner_password')||DEFAULT_PASS}
+function login(){let p=loginPassword.value;if(p===password()){sessionStorage.setItem('lpm_login','yes');loginScreen.style.display='none'}else loginError.textContent='❌ Password si sahihi.'}
+function logout(){sessionStorage.removeItem('lpm_login');loginScreen.style.display='flex'}
+if(sessionStorage.getItem('lpm_login')==='yes')loginScreen.style.display='none';
+loginPassword.addEventListener('keydown',e=>{if(e.key==='Enter')login()});
+
+function page(id,b){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.sidebar button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');renderAll()}
+
+function addCustomer(e){
+ e.preventDefault();
+ customers.push({id:Date.now(),name:cName.value,phone:cPhone.value,nida:cNida.value,business:cBusiness.value,extra:cExtra.value});
+ save();e.target.reset();renderAll();alert('Mteja amehifadhiwa.');
+}
+function renderCustomers(q=''){
+ customerTable.innerHTML=customers.filter(c=>(c.name+' '+c.phone+' '+c.nida+' '+c.business).toLowerCase().includes(q.toLowerCase())).map(c=>`
+ <tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.nida||'-')}</td><td>${esc(c.business||'-')}</td>
+ <td><button class="btn danger" onclick="deleteCustomer(${c.id})">Futa</button></td></tr>`).join('')||'<tr><td colspan="5">Hakuna wateja.</td></tr>';
+}
+function deleteCustomer(id){if(confirm('Futa mteja huyu?')){customers=customers.filter(c=>c.id!==id);save();renderAll()}}
+
+loanCustomer.onchange=()=>{let c=customers.find(x=>x.id==loanCustomer.value);displayPhone.value=c?c.phone:'';};
+function updateTotal(){loanTotal.textContent='Jumla ya kulipa: '+money((+principal.value||0)+(+interestAmount.value||0))}
+principal.oninput=updateTotal;interestAmount.oninput=updateTotal;
+
+function addLoan(e){
+ e.preventDefault();
+ let p=+principal.value, interest=+interestAmount.value;
+ // Riba ni kiasi kilichoingizwa na mtumiaji; mfumo HAUCHANGUI wala kubadilisha riba.
+ let total=p+interest;
+ loans.push({
+  id:Date.now(),customerId:+loanCustomer.value,principal:p,
+  interest:interest,total:total,balance:total,
+  debtorName:debtorName.value,debtorPhone:debtorPhone.value,debtorNida:debtorNida.value,
+  date:loanDate.value,due1:dueDate1.value,due2:dueDate2.value,due3:dueDate3.value,due4:dueDate4.value,status:'Active'
+ });
+ save();e.target.reset();loanDate.value=today();dueDate1.value=today();dueDate2.value=today();dueDate3.value=today();dueDate4.value=today();updateTotal();renderAll();alert('Mkopo umehifadhiwa.');
+}
+function deleteLoan(id){if(confirm('Futa mkopo huu?')){loans=loans.filter(l=>l.id!==id);payments=payments.filter(p=>p.loanId!==id);save();renderAll()}}
+
+function addPayment(e){
+ e.preventDefault();let id=+payLoan.value,amount=+payAmount.value,l=loans.find(x=>x.id===id);
+ if(!l)return;
+ if(amount>l.balance){alert('Kiasi cha malipo kinazidi salio la mkopo.');return}
+ payments.push({id:Date.now(),loanId:id,amount,date:payDate.value});
+ l.balance-=amount;if(l.balance===0)l.status='Paid';save();e.target.reset();payDate.value=today();renderAll();alert('Malipo yamehifadhiwa.');
+}
+
+function renderSelects(){
+ loanCustomer.innerHTML=customers.map(c=>`<option value="${c.id}">${esc(c.name)} - ${esc(c.phone)}</option>`).join('');
+ loanCustomer.onchange(); 
+ payLoan.innerHTML=loans.filter(l=>l.balance>0).map(l=>{let c=customers.find(x=>x.id===l.customerId);return `<option value="${l.id}">${esc(c?.name||'Unknown')} — Salio ${money(l.balance)}</option>`}).join('');
+}
+function renderLoans(){
+ loanTable.innerHTML=loans.map(l=>{let c=customers.find(x=>x.id===l.customerId);return `<tr>
+ <td>${esc(c?.name||'Unknown')}</td><td>${money(l.principal)}</td><td>${money(l.interest)}</td><td>${money(l.total)}</td>
+ <td>${esc(l.debtorName)}<br>${esc(l.debtorPhone)}</td><td>${esc(l.debtorNida||'-')}</td><td>${money(l.balance)}</td><td>${l.due1||"-"}</td><td>${l.due2||"-"}</td><td>${l.due3||"-"}</td><td>${l.due4||"-"}</td>
+ <td><button class="btn danger" onclick="deleteLoan(${l.id})">Futa</button></td></tr>`}).join('')||'<tr><td colspan="13">Hakuna mikopo.</td></tr>';
+}
+function renderPayments(){
+ paymentTable.innerHTML=payments.map(p=>{let l=loans.find(x=>x.id===p.loanId),c=customers.find(x=>x.id===l?.customerId);return `<tr><td>${esc(c?.name||'Unknown')}</td><td>${money(p.amount)}</td><td>${p.date}</td></tr>`}).join('')||'<tr><td colspan="3">Hakuna malipo.</td></tr>';
+}
+function renderDashboard(){
+ let paid=payments.reduce((s,p)=>s+p.amount,0),debt=loans.reduce((s,l)=>s+l.balance,0);
+ dc.textContent=customers.length;dl.textContent=loans.length;dp.textContent=money(paid);db.textContent=money(debt);
+ recent.innerHTML=loans.slice(-8).reverse().map(l=>{let c=customers.find(x=>x.id===l.customerId);return `<tr><td>${esc(c?.name||'Unknown')}</td><td>${money(l.principal)}</td><td>${money(l.interest)}</td><td>${money(l.total)}</td><td>${money(l.balance)}</td><td>${l.date}</td></tr>`}).join('')||'<tr><td colspan="6">Hakuna data.</td></tr>';
+}
+function renderReports(){
+ rp.textContent=money(loans.reduce((s,l)=>s+l.principal,0));
+ ri.textContent=money(loans.reduce((s,l)=>s+l.interest,0));
+ rd.textContent=money(loans.reduce((s,l)=>s+l.balance,0));
+ rpay.textContent=money(payments.reduce((s,p)=>s+p.amount,0));
+}
+function renderAll(){renderCustomers();renderSelects();renderLoans();renderPayments();renderDashboard();renderReports()}
+
+function changePassword(e){
+ e.preventDefault();
+ if(oldPass.value!==password())return alert('Password ya sasa si sahihi.');
+ if(newPass.value!==confirmPass.value)return alert('Password mpya hazifanani.');
+ localStorage.setItem('lpm_owner_password',newPass.value);e.target.reset();alert('Password imebadilishwa.');
+}
+function backup(){
+ let data=JSON.stringify({customers,loans,payments},null,2),a=document.createElement('a');
+ a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download='LPM-Microfinance-Backup.json';a.click();
+}
+function wipe(){if(confirm('Uhakika? Data zote za LPM-Microfinance zitafutwa kwenye browser hii.')){localStorage.removeItem('lpm_customers');localStorage.removeItem('lpm_loans');localStorage.removeItem('lpm_payments');customers=[];loans=[];payments=[];renderAll()}}
+
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+
+loanDate.value=today();dueDate1.value=today();dueDate2.value=today();dueDate3.value=today();dueDate4.value=today();payDate.value=today();renderAll();
+</script>
+</body>
+</html>
